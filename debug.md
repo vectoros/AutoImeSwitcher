@@ -1,18 +1,22 @@
-# Debug Session: 2026-02-23-001
-- **Status**: [OPEN]
-- **Issue**: 前台应用焦点变化无法准确监听，输入法切换未触发
+# Focus Detection Validation
 
-## Reproduction Steps (Repro Steps)
-1. 确保调试服务器运行在 `http://127.0.0.1:7777/event`
-2. 在项目根目录运行 `swift run --disable-sandbox`
-3. 启动后 30 秒内切换前台应用（例如 VSCode → 飞书 → 微信）
-4. 记录 `.dbg/trae-debug-log-<sessionId>.ndjson` 中 runId 为 `pre-fix` 的日志
+## Automated checks
 
-## Hypotheses & Verification (Hypotheses)
-- [x] Hypothesis A: didActivateApplication 通知未触发或触发频率异常 | Evidence: Rejected（日志中已出现多条 did_activate_application）
-- [ ] Hypothesis B: 前台应用 bundleId 与配置不匹配导致无法命中映射 | Evidence: Pending
-- [x] Hypothesis C: 前台应用确实变化，但应用未激活导致通知丢失 | Evidence: Rejected（非本应用 bundleId 也被记录）
-- [ ] Hypothesis D: 输入法切换调用执行但未成功切换 | Evidence: Pending
+Run `swift test --disable-xctest` with Swift 6 or later. The injected scheduler exercises rapid focus changes, cancellation, retry limits, delayed source restoration, manual switching after completion, and persistence of unavailable/legacy input sources without changing system input methods.
 
-## Verification Conclusion (Verification)
-[Pending]
+## Manual checks (macOS 27)
+
+Run only one switcher instance. Use two installed input methods and two configured applications.
+
+1. Switch rapidly between configured apps and an unconfigured app. Only the actual foreground app should receive its rule; unconfigured apps retain the current source.
+2. Enable enhanced detection through the settings page. Verify switching windows and standard text fields in the same app. Check permission revocation and reauthorization without restarting.
+3. Try Spaces, full-screen windows, sleep/wake, and lock/unlock. A missed activation should recover on the next frontmost-process poll.
+4. Pause automatic switching and verify that pending retries stop. Resume and check the current application.
+5. Remove an input source in System Settings, refresh, and relaunch. Its rule must remain visible as unavailable. Restore the input source and refresh again.
+6. Verify rule search, multi-app selection, duplicate additions, removal, logs, and settings-window reopening in light and dark appearance.
+
+Inspect the in-app log for focus triggers and switch results. Logs contain application/input-source identifiers, never field contents, and are limited to 300 in-memory entries. Unsupported accessibility controls fall back to application-level detection.
+
+## Toolchain troubleshooting
+
+If `Package.swift` fails to link `PackageDescription.Package.__allocating_init` before sources compile, check for mixed Command Line Tools versions. On the development machine, the public PackageDescription interface was Swift 6.4 while the private interface was Swift 5.10. Use a consistent Xcode/Command Line Tools installation. A temporary copy of ManifestAPI excluding stale private interfaces can isolate this for validation; do not modify system toolchain files or commit that copy.

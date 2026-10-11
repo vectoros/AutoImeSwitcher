@@ -43,14 +43,18 @@ enum InputSourceManager {
         return sourcesById.values.sorted { $0.displayName.localizedCaseInsensitiveCompare($1.displayName) == .orderedAscending }
     }
 
-    static func selectInputSource(id: String) {
-        let filter: [String: Any] = [kTISPropertyInputSourceID as String: id]
+    @discardableResult
+    static func selectInputSource(id: String) -> OSStatus {
+        let filter: [String: Any] = [
+            kTISPropertyInputSourceID as String: id,
+            kTISPropertyInputSourceIsSelectCapable as String: true
+        ]
         guard let list = TISCreateInputSourceList(filter as CFDictionary, false)?.takeRetainedValue() as? [TISInputSource],
               let source = list.first
         else {
-            return
+            return OSStatus(paramErr)
         }
-        TISSelectInputSource(source)
+        return TISSelectInputSource(source)
     }
 
     static func currentInputSource() -> InputSource? {

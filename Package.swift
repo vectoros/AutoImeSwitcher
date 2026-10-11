@@ -13,6 +13,11 @@ let package = Package(
         .executableTarget(
             name: "AutoImeSwitcher",
             path: "Sources"
+        ),
+        .testTarget(
+            name: "AutoImeSwitcherTests",
+            dependencies: ["AutoImeSwitcher"],
+            path: "Tests/AutoImeSwitcherTests"
         )
     ]
 )

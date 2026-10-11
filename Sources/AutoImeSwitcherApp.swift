@@ -9,17 +9,9 @@ struct AutoImeSwitcherApp: App {
         WindowGroup {
             SettingsView()
                 .environmentObject(appState)
-                .frame(minWidth: 640, minHeight: 420)
+                .frame(minWidth: 780, minHeight: 560)
                 .onAppear {
                     appDelegate.attachWindowDelegate()
-                    // #region debug-point
-                    DebugReporter.send(
-                        event: "settings_view_on_appear",
-                        data: [
-                            "thread": Thread.isMainThread ? "main" : "background"
-                        ]
-                    )
-                    // #endregion debug-point
                 }
         }
     }

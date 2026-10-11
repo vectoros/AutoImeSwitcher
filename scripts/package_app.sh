@@ -8,13 +8,15 @@ BUILD_NUMBER="${BUILD_NUMBER:-1}"
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 DIST_DIR="${ROOT_DIR}/dist/MacOS"
 APP_DIR="${DIST_DIR}/${APP_NAME}.app"
-BIN_PATH="${ROOT_DIR}/.build/release/${APP_NAME}"
+cd "${ROOT_DIR}"
 
 mkdir -p "${DIST_DIR}"
 
 python3 "${ROOT_DIR}/scripts/generate_app_icon.py"
 
 swift build -c release --disable-sandbox
+BIN_DIR="$(swift build -c release --disable-sandbox --show-bin-path)"
+BIN_PATH="${BIN_DIR}/${APP_NAME}"
 
 rm -rf "${APP_DIR}"
 mkdir -p "${APP_DIR}/Contents/MacOS"

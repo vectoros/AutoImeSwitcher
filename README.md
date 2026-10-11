@@ -23,14 +23,14 @@ A macOS application that automatically switches input methods when you switch be
 2. Run the app packaging script in the project root:
 
 ```bash
-./scripts/package_app.sh
+bash scripts/package_app.sh
 ```
 
 3. The built application will be generated automatically
 4. Generate DMG file
 
 ```bash
-./scripts/package_dmg.sh
+bash scripts/package_dmg.sh
 ```
 
 ### Install from DMG (requires manual build)
@@ -75,3 +75,23 @@ AutoImeSwitcher/
 ## License
 
 MIT License
+
+## Focus Detection and macOS 27
+
+The app uses public NSWorkspace, Accessibility, and Carbon APIs and keeps macOS 12 as its deployment target. Application/Space changes trigger detection; a 0.6-second frontmost-process check catches missed activation events. Switching is verified with at most three attempts, and stale requests are discarded when focus changes or switching is paused.
+
+In settings, choose **启用增强检测…** and grant the system-requested Accessibility permission to enable same-app window and text-field focus events. Without permission (or when an app does not expose accessibility events), application-level detection still works. Permission changes are picked up automatically. Custom editors may not expose standard text-field roles. No keyboard input or field contents are collected.
+
+Settings include searchable rules, multi-app selection, a pause switch, live status, and an in-memory log (300 entries). Unconfigured apps keep the current input source. Manual changes remain in effect after a switch transaction completes, until the next supported focus event. Temporarily unavailable input sources retain their rules.
+
+## Development and Validation
+
+```bash
+swift build
+swift test --disable-xctest
+swift run
+```
+
+Tests require Swift 6 or later with Swift Testing. Swift Testing covers stale focus requests, cancellation, bounded retries, delayed input-source restoration, and configuration preservation. For manual validation on macOS 27, test rapid app switching, same-app windows/text fields with and without permission, Spaces/full-screen transitions, wake/unlock, unavailable input methods, and pause/resume. Test third-party input methods separately; accessibility support varies by app. Avoid running two copies of the switcher during these checks.
+
+Configuration remains at `~/Library/Application Support/AutoImeSwitcher/config.json`. Invalid configuration is preserved and reported rather than overwritten. Diagnostics stay in memory; no local debug server is required.
